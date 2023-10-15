@@ -1,0 +1,36 @@
+{
+  "name": "typewad",
+  "license": "MIT",
+  "author": "TheEVolk (https://t.me/theevolk)",
+  "repository": "github:theevolk/typewad",
+  "description": "Simple Doom WAD parser",
+  "type": "module",
+  "main": "lib/index.mjs",
+  "types": "./lib/index.d.ts",
+  "dependencies": {
+    "cdt2d": "^1.0.0",
+    "clean-pslg": "^1.1.2",
+    "debug": "^4.3.4"
+  },
+  "version": "0.1.0",
+  "devDependencies": {
+    "@rollup/plugin-run": "^3.0.2",
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/node": "^18.14.6",
+    "rollup": "^3.29.4",
+    "typescript": "^4.9.4"
+  },
+  "scripts": {
+    "dev": "rollup --config --watch",
+    "build": "rollup --config"
+  },
+  "keywords": [
+    "wad",
+    "doom",
+    "typescript"
+  ],
+  "files": [
+    "lib/"
+  ]
+}
