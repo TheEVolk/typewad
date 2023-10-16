@@ -11,7 +11,7 @@ export default class MapMeshBuilder {
   private sectors: IWadMapSector[];
   private vertexes: any[];
 
-  public constructor(private readonly map: WadMap) {
+  public constructor(private readonly map: WadMap, private readonly getTextureSize: (name: string) => [number, number]) {
     this.sidedefs = [...map.get(WadMapLump.SideDefs)];
     this.sectors = [...map.get(WadMapLump.Sectors)];
     this.vertexes = [...map.get(WadMapLump.Vertexes)];
@@ -42,18 +42,18 @@ export default class MapMeshBuilder {
   public createWallLeftSurface(linedef: IWadMapLinedef, leftSide: IWadMapSidedef, leftSector: IWadMapSector, rightSector: IWadMapSector) {
     let lower = null;
     if (leftSide.lower !== '-') {
-      lower = this.createWallMesh(linedef, leftSector.floor, rightSector.floor);
+      lower = this.createWallMesh(linedef, leftSector.floor, rightSector.floor, leftSide.lower, leftSide);
     }
 
     let middle = null;
     if (leftSide.middle !== '-') {
-      middle = this.createWallMesh(linedef, leftSector.floor, leftSector.ceil);
+      middle = this.createWallMesh(linedef, leftSector.floor, leftSector.ceil, leftSide.middle, leftSide);
     }
 
     let upper = null;
     if (leftSide.upper !== '-') {
       // TODO: ???
-      upper = this.createWallMesh(linedef, leftSector.ceil, leftSector.ceil);
+      upper = this.createWallMesh(linedef, leftSector.ceil, leftSector.ceil, leftSide.upper, leftSide);
     }
 
     return [lower, middle, upper];
@@ -62,25 +62,26 @@ export default class MapMeshBuilder {
   public createWallRightSurface(linedef: IWadMapLinedef, rightSide: IWadMapSidedef, rightSector: IWadMapSector, leftSector?: IWadMapSector) {
     let lower = null;
     if (rightSide.lower !== '-') {
-      lower = this.createWallMesh(linedef, rightSector.floor, leftSector?.floor || 0);
+      lower = this.createWallMesh(linedef, rightSector.floor, leftSector?.floor || 0, rightSide.lower, rightSide);
     }
 
     let middle = null;
     if (rightSide.middle !== '-') {
-      middle = this.createWallMesh(linedef, rightSector.floor, rightSector.ceil);
+      middle = this.createWallMesh(linedef, rightSector.floor, rightSector.ceil, rightSide.middle, rightSide);
     }
 
     let upper = null;
     if (rightSide.upper !== '-') {
-      upper = this.createWallMesh(linedef, leftSector?.ceil || 0, rightSector.ceil);
+      upper = this.createWallMesh(linedef, leftSector?.ceil || 0, rightSector.ceil, rightSide.upper, rightSide);
     }
 
     return [lower, middle, upper];
   }
 
-  public createWallMesh(linedef: IWadMapLinedef, floor: number, ceil: number) {
+  public createWallMesh(linedef: IWadMapLinedef, floor: number, ceil: number, texture: string, sidedef: IWadMapSidedef) {
     const startVertex = this.vertexes[linedef.startVertex];
     const endVertex = this.vertexes[linedef.endVertex];
+
 
     return {
       positions: [
@@ -91,7 +92,7 @@ export default class MapMeshBuilder {
       ],
       indices: [1, 2, 0, 3, 1, 0],
       normals: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
-      uvs: [0, 0, 1, 1, 0, 1, 1, 0],
+      uvs: this.buildWallUv(startVertex, endVertex, floor, ceil, texture, sidedef),
     };
   }
 
@@ -110,55 +111,35 @@ export default class MapMeshBuilder {
     }
   }
 
+  private buildWallUv(startVertex, endVertex, floor: number, ceil: number, textureName: string, sidedef: IWadMapSidedef) {
+    const textureSize = this.getTextureSize(textureName);
+    if (!textureSize) {
+      console.warn(`No texture size ${textureName}`);
+      return [];
+    }
+
+    const height = ceil - floor;	
+	  const width = Math.sqrt(Math.pow(startVertex.x - endVertex.x, 2) + Math.pow(startVertex.y - endVertex.y, 2));
+
+    const offsetU = sidedef.offsetX / textureSize[0];
+    const offsetV = sidedef.offsetY / textureSize[1];
+    const endU = (width / textureSize[0]) + offsetU;
+    const endV = (height / textureSize[1]) + offsetV;
+
+    return [offsetU, offsetV, endU, endV, offsetU, endV, endU, offsetV];
+  }
+
   private buildHorizontalSurface(vertexes) {
     const points = vertexes.map(({ x, y }) => [x, y]);
     const edges = Array.from({ length: points.length / 2 }, (_, i) => [i * 2, i * 2 + 1]);
 
     cleanPSLG(points, edges);
     const triangles = cdt2d(points, edges, { exterior: false });
+
     return {
       positions: points.flatMap(v => [v[0], 0, v[1]]),
       indices: triangles.flat(),
-      // TODO: autogenerate UV map
-      uvs: generateUVs(points)
+      uvs: points.flatMap(v => [v[0] / 64, v[1] / 64]),
     };
   }
-}
-
-
-function generateUVs(points) {
-  const minMaxX = getMinMax(points, 0);
-  const minMaxY = getMinMax(points, 1);
-  const uvs = [];
-
-  for (const point of points) {
-    const uvX = normalize(point[0], minMaxX);
-    const uvY = normalize(point[1], minMaxY);
-    uvs.push(uvX, uvY);
-  }
-
-  return uvs;
-}
-
-function getMinMax(points, index) {
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-
-  for (const point of points) {
-    const value = point[index];
-
-    if (value < min) {
-      min = value;
-    }
-
-    if (value > max) {
-      max = value;
-    }
-  }
-
-  return { min, max };
-}
-
-function normalize(value, { min, max }) {
-  return (value - min) / (max - min);
 }
