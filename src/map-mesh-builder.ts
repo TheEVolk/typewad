@@ -119,6 +119,46 @@ export default class MapMeshBuilder {
     return {
       positions: points.flatMap(v => [v[0], 0, v[1]]),
       indices: triangles.flat(),
+      // TODO: autogenerate UV map
+      uvs: generateUVs(points)
     };
   }
+}
+
+
+function generateUVs(points) {
+  const minMaxX = getMinMax(points, 0);
+  const minMaxY = getMinMax(points, 1);
+  const uvs = [];
+
+  for (const point of points) {
+    const uvX = normalize(point[0], minMaxX);
+    const uvY = normalize(point[1], minMaxY);
+    uvs.push(uvX, uvY);
+  }
+
+  return uvs;
+}
+
+function getMinMax(points, index) {
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+
+  for (const point of points) {
+    const value = point[index];
+
+    if (value < min) {
+      min = value;
+    }
+
+    if (value > max) {
+      max = value;
+    }
+  }
+
+  return { min, max };
+}
+
+function normalize(value, { min, max }) {
+  return (value - min) / (max - min);
 }

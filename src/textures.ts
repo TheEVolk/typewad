@@ -9,17 +9,14 @@ export default class WadTextures {
   public readonly textures = [];
   public readonly textureByName = new Map<string, IWadTexture>();
   public readonly pictures = new Map<string, IWadPicture>();
+  public readonly flats = new Map<string, number>();
   private pnamesLump: IWadLump;
   private palleteOffset: number;
 
   public constructor(private readonly wad: WadReader) {
     this.palleteOffset = wad.getLump('PLAYPAL').offset;
-    console.log('pallete', this.palleteOffset);
-    for (let i = 0; i < 256; i++) {
-      console.log(`%c color: ${i}`, `color: rgb(${this.getColor(i).join(', ')})`);
-    }
-
     this.loadPatchs();
+    this.loadFlats();
 
     const texture1Index = wad.findLumpIndex('TEXTURE1');
     const texture1Lump = wad.lumps[texture1Index];
@@ -39,6 +36,32 @@ export default class WadTextures {
       this.wad.buffer.readUInt8(this.palleteOffset + index + 2),
     ];
   }
+
+  public textureToImageData(texture: IWadTexture) {
+    const textureImageData = new Uint8ClampedArray(texture.width * texture.height * 4);
+    for (const patch of texture.patches) {
+      const picture = this.pictures.get(patch.patch);
+      if (!picture) {
+        continue;
+      }
+
+      const imageData = this.pictureToImageData(picture);
+      this.applyPictureInPicture(
+        textureImageData,
+        imageData,
+        0,
+        0,
+        picture.width,
+        picture.height,
+        patch.originX,
+        patch.originY,
+        texture.width,
+        texture.height,
+      );
+    }
+
+    return textureImageData;
+  }
  
   public pictureToImageData(picture: IWadPicture) {
       const imageDataLength = picture.width * picture.height * 4;
@@ -49,6 +72,68 @@ export default class WadTextures {
 	    }	
   
       return imageData;
+  }
+
+  public flatToImageData(offset: number) {
+    const data = new Uint8ClampedArray(64 * 64 * 4);
+    for (let i = 0; i < 64 * 64; i++) {
+      const colorId = this.wad.buffer.readUInt8(offset + i);
+      const [r, g, b] = this.getColor(colorId);
+
+      const index = i * 4;
+      data[index] = r;
+      data[index + 1] = g;
+      data[index + 2] = b;
+      data[index + 3] = 255;
+    }
+
+    return data;
+  }
+
+
+  private loadFlats() {
+    const startMarkerIndex = this.wad.findLumpIndex('F_START');
+    for (let i = startMarkerIndex + 1;; i++) {
+      const lump = this.wad.lumps[i];
+      if (!lump || lump.name === 'F_END') {
+        break;
+      }
+
+      if (lump.size === 0) {
+        continue;
+      }
+
+      this.flats.set(lump.name, lump.offset);
+    }
+  }
+
+  private applyPictureInPicture(
+    dest: Uint8ClampedArray,
+    src: Uint8ClampedArray,
+    srcX: number,
+    srcY: number,
+    srcWidth: number,
+    srcHeight: number,
+    destX: number,
+    destY: number,
+    destWidth: number,
+    destHeight: number,
+  ) {
+    const destPixelSize = 4; // Each pixel in the destination has 4 values (RGBA)
+    const srcPixelSize = 4;  // Each pixel in the source has 4 values (RGBA)
+  
+    for (let y = 0; y < srcHeight; y++) {
+      for (let x = 0; x < srcWidth; x++) {
+        const srcIndex = ((srcY + y) * srcWidth + (srcX + x)) * srcPixelSize;
+        const destIndex = ((destY + y) * destWidth + (destX + x)) * destPixelSize;
+  
+        // Copy RGBA values from source to destination
+        dest[destIndex] = src[srcIndex];         // Red
+        dest[destIndex + 1] = src[srcIndex + 1]; // Green
+        dest[destIndex + 2] = src[srcIndex + 2]; // Blue
+        dest[destIndex + 3] = src[srcIndex + 3]; // Alpha
+      }
+    }
   }
 
   private drawColumn(data: Uint8ClampedArray, picture: IWadPicture, column: number) {
