@@ -2,17 +2,9 @@ import WadMapItemByLump from "./types/wad-map-item-by-lump";
 import IWadMapLinedef from "./types/wad-map-linedef.interface";
 import WadMapLump from "./types/wad-map-lump.enum";
 import IWadMapSector from "./types/wad-map-sector.interface";
+import { readString } from "./util";
 
 type WadMapItemMapper<T extends WadMapLump> = (buffer: Buffer, offset: number) => WadMapItemByLump<T>;
-
-function readString(buffer: Buffer, offset: number, size = 8) {
-  let nullTerminatorIndex = buffer.indexOf(0, offset);
-  if (nullTerminatorIndex < 0) {
-    return buffer.toString('utf-8', offset, offset + size);
-  }
-
-  return buffer.toString('utf-8', offset, Math.min(offset + size, nullTerminatorIndex));
-}
 
 // TODO: refactor typescript types
 const mapMappers: Record<WadMapLump, WadMapItemMapper<any>> = {

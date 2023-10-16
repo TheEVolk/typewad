@@ -28,6 +28,21 @@ export default class WadReader {
     throw new Error('Invalid lump name');
   }
 
+  public getLump(name: string) {
+    for (let i = 0; i < this.lumps.length; i++) {
+      if (this.lumps[i].name !== name) {
+        continue;
+      }
+
+      return this.lumps[i];
+    }
+  }
+
+  public findLump(name: string) {
+    const index = this.findLumpIndex(name);
+    return this.lumps[index];
+  }
+
   private parseHeader() {
     this.debug('Parsing Header:');
     const type = this.buffer.toString('utf-8', 0, 4) as ('PWAD' | 'IWAD');
