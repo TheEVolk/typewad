@@ -140,6 +140,7 @@ export default class MapMeshBuilder {
       positions: points.flatMap(v => [v[0], 0, v[1]]),
       indices: triangles.flat(),
       uvs: points.flatMap(v => [v[0] / 64, v[1] / 64]),
+      normals: points.flatMap(() => [0, 0, 1]),
     };
   }
 }

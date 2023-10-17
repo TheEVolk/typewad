@@ -28,6 +28,10 @@ export default class WadTextures {
     }
   }
 
+  public static hasTextures(wad: WadReader) {
+    return Boolean(wad.getLump('TEXTURE1'));
+  }
+
   public getColor(id: number) {
     const index = id * 3;
     return [
