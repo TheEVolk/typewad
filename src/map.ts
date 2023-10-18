@@ -8,13 +8,21 @@ import IWadMapVertex from "./types/wad-map-vertex.interface";
 import IWadMapSidedef from "./types/waf-map-sidedef.interface";
 import IWadMapSector from "./types/wad-map-sector.interface";
 import { rawLineDistance } from "./util";
+import IWadMapNode from "./types/wad-map-node.interface";
+import IWadMapSegment from "./types/wad-map-segment.interface";
+import MapUtil from "./map-util";
+import IWadMapSubsector from "./types/wad-map-subsector.interface";
 
 export default class WadMap {
   private readonly offset: number;
   public readonly vertexes: IWadMapVertex[];
-  private linedefs: IWadMapLinedef[];
-  private sidedefs: IWadMapSidedef[];
-  private sectors: IWadMapSector[];
+  public readonly linedefs: IWadMapLinedef[];
+  public readonly sidedefs: IWadMapSidedef[];
+  public readonly sectors: IWadMapSector[];
+  public readonly subsectors: IWadMapSubsector[];
+  public readonly nodes: IWadMapNode[];
+  public readonly segments: IWadMapSegment[];
+  public readonly util: MapUtil;
 
   public constructor(private readonly reader: WadReader, id: number | string) {
     this.offset = typeof id === 'number' ? id : this.reader.findLumpIndex(id);
@@ -22,6 +30,12 @@ export default class WadMap {
     this.linedefs = [...this.get(WadMapLump.Linedefs)];
     this.sidedefs = [...this.get(WadMapLump.SideDefs)];
     this.sectors = [...this.get(WadMapLump.Sectors)];
+    this.subsectors = [...this.get(WadMapLump.Ssectors)];
+    this.nodes = [...this.get(WadMapLump.Nodes)];
+    this.segments = [...this.get(WadMapLump.Seags)];
+
+    this.util = new MapUtil(this);
+    console.log(this);
   }
 
   public groupVertexesBySector() {
@@ -48,70 +62,26 @@ export default class WadMap {
     return result;
   }
 
-  public getSector(x: number, y: number): IWadMapSector | null {
-    const linedef = this.findNearLinedef(x, y);
-    const isRight = this.isRightSideFromLinedef(linedef, x, y);
-    const sidedef = this.sidedefs[isRight ? linedef.rightSidedef : linedef.leftSidedef];
-    if (!sidedef) {
-      return null;
-    }
-
-    return this.sectors[sidedef.sector];
-  }
-
   public *get<T extends WadMapLump>(
     indice: T,
     index = 0,
   ): Generator<WadMapItemByLump<T>> {
     const info = this.getLumpInfo(indice);
-    const buffer = this.reader.buffer;
     const mapper = mapMappers[indice];
+    
     for (let i = index; i < info.count; i++) {
-      yield mapper(buffer, info.offset + i * MAP_ITEM_SIZES[indice]);
+      yield mapper(this.reader.buffer, info.offset + i * MAP_ITEM_SIZES[indice]);
     }
   }
-
-  public findNearLinedef(x: number, z: number): IWadMapLinedef | null {
-    let minDistance = Infinity;
-    let nearestLinedef: IWadMapLinedef | null = null;
-
-    for (const linedef of this.linedefs) {
-      const distance = this.rawDistanceToLinedef(linedef, x, z);
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestLinedef = linedef;
-      }
-    }
-
-    if (!nearestLinedef) {
-      throw new Error(`Linedefs is null`);
-    }
-
-    return nearestLinedef;
-  }
-
-  public rawDistanceToLinedef(linedef: IWadMapLinedef, x: number, y: number) {
-      const startVertex = this.vertexes[linedef.startVertex];
-      const endVertex = this.vertexes[linedef.endVertex];
-  
-      return rawLineDistance(x, y, startVertex.x, startVertex.y, endVertex.x, endVertex.y);
-  }
-
-  private isRightSideFromLinedef(linedef: IWadMapLinedef, x: number, y: number): boolean {
-    const startVertex = this.vertexes[linedef.startVertex];
-    const endVertex = this.vertexes[linedef.endVertex];
-
-    return (endVertex.x - startVertex.x) * (y - startVertex.y) - (endVertex.y - startVertex.y) * (x - startVertex.x) < 0;
-  }
-  
 
   private getLumpInfo(indice: WadMapLump) {
     const { offset, size } = this.reader.lumps[this.offset + indice];
+
+    const itemSize = MAP_ITEM_SIZES[indice];
     return {
       size,
       offset,
-      count: size / MAP_ITEM_SIZES[indice]
+      count: itemSize ? (size / itemSize) : null
     };
   }
 }

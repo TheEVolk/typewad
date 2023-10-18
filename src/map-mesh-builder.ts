@@ -52,8 +52,7 @@ export default class MapMeshBuilder {
 
     let upper = null;
     if (leftSide.upper !== '-') {
-      // TODO: ???
-      upper = this.createWallMesh(linedef, leftSector.ceil, leftSector.ceil, leftSide.upper, leftSide);
+      upper = this.createWallMesh(linedef, leftSector.ceil, rightSector.ceil, leftSide.upper, leftSide);
     }
 
     return [lower, middle, upper];

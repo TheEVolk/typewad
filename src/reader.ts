@@ -16,6 +16,18 @@ export default class WadReader {
     this.debug(`Parsing time: ${Date.now() - startAt} ms`);
   }
 
+  public getLumpIndex(name: string) {
+    for (let i = 0; i < this.lumps.length; i++) {
+      if (this.lumps[i].name !== name) {
+        continue;
+      }
+
+      return i;
+    }
+
+    return -1;
+  }
+
   public findLumpIndex(name: string) {
     for (let i = 0; i < this.lumps.length; i++) {
       if (this.lumps[i].name !== name) {

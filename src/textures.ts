@@ -96,7 +96,11 @@ export default class WadTextures {
 
 
   private loadFlats() {
-    const startMarkerIndex = this.wad.findLumpIndex('F_START');
+    const startMarkerIndex = this.wad.getLumpIndex('F_START');
+    if (startMarkerIndex === -1) {
+      return;
+    }
+
     for (let i = startMarkerIndex + 1;; i++) {
       const lump = this.wad.lumps[i];
       if (!lump || lump.name === 'F_END') {
