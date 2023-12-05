@@ -1,21 +1,16 @@
 import WadMapItemByLump from "./types/wad-map-item-by-lump";
-import IWadMapLinedef from "./types/wad-map-linedef.interface";
 import WadMapLump from "./types/wad-map-lump.enum";
-import IWadMapNode from "./types/wad-map-node.interface";
-import IWadMapSector from "./types/wad-map-sector.interface";
-import IWadMapSegment from "./types/wad-map-segment.interface";
-import IWadMapSubsector from "./types/wad-map-subsector.interface";
 import { readString } from "./util";
 
 // TODO: refactor typescript types
-const mapMappers = {
+const mapMappers: Record<WadMapLump, WadMapItemByLump<WadMapLump>> = {
   [WadMapLump.Things]: (buffer: Buffer, offset: number) => ({
     x: buffer.readInt16LE(offset),
     y: buffer.readInt16LE(offset + 2),
     angle: buffer.readUInt16LE(offset + 4),
     type: buffer.readUInt16LE(offset + 6),
     flags: buffer.readUInt16LE(offset + 8)
-  }) as WadMapItemByLump<WadMapLump.Things>,
+  }),
   [WadMapLump.Linedefs]: (buffer: Buffer, offset: number) => ({
     startVertex: buffer.readInt16LE(offset),
     endVertex: buffer.readInt16LE(offset + 2),
@@ -24,7 +19,7 @@ const mapMappers = {
     sectorTag: buffer.readInt16LE(offset + 8),
     rightSidedef: buffer.readInt16LE(offset + 10),
     leftSidedef: buffer.readInt16LE(offset + 12),
-  }) as IWadMapLinedef,
+  }),
   [WadMapLump.SideDefs]: (buffer: Buffer, offset: number) => ({
     offsetX: buffer.readInt16LE(offset),
     offsetY: buffer.readInt16LE(offset + 2),
@@ -44,11 +39,11 @@ const mapMappers = {
     linedef: buffer.readUInt16LE(offset + 6),
     isSameDirection: buffer.readUInt16LE(offset + 8) === 0,
     linedefToSeqOffset: buffer.readUInt16LE(offset + 10),
-  }) as IWadMapSegment,
+  }),
   [WadMapLump.Ssectors]: (buffer: Buffer, offset: number) => ({
     count: buffer.readUInt16LE(offset),
     firstSegment: buffer.readUInt16LE(offset + 2),
-  }) as IWadMapSubsector,
+  }),
   [WadMapLump.Nodes]: (buffer: Buffer, offset: number) => ({
     x: buffer.readInt16LE(offset),
     y: buffer.readInt16LE(offset + 2),
@@ -68,7 +63,7 @@ const mapMappers = {
     ],
     rightChild: buffer.readUInt16LE(offset + 24),
     leftChild: buffer.readUInt16LE(offset + 26),
-  }) as IWadMapNode,
+  }),
   [WadMapLump.Sectors]: (buffer: Buffer, offset: number) => ({
     floor: buffer.readInt16LE(offset),
     ceil: buffer.readInt16LE(offset + 2),
@@ -77,7 +72,7 @@ const mapMappers = {
     light: buffer.readInt16LE(offset + 20),
     type: buffer.readInt16LE(offset + 22),
     tag: buffer.readInt16LE(offset + 24),
-  }) as IWadMapSector,
+  }),
   [WadMapLump.Reject]: (buffer: Buffer, offset: number): WadMapItemByLump<WadMapLump.Reject> => { throw new Error("Function not implemented."); },
   [WadMapLump.Blockmap]: (buffer: Buffer, offset: number): WadMapItemByLump<WadMapLump.Blockmap> => { throw new Error("Function not implemented."); }
 };

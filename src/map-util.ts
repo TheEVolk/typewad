@@ -1,6 +1,6 @@
 import { NF_SUBSECTOR } from "./const";
 import WadMap from "./map";
-import IWadMapNode from "./types/wad-map-node.interface";
+import { IWadMapNode } from "./types/wad-map-lump.interface";
 
 export default class MapUtil {
     public constructor(private readonly map: WadMap) {

@@ -1,23 +1,17 @@
-import IWadMapLinedef from "./wad-map-linedef.interface";
 import WadMapLump from "./wad-map-lump.enum";
-import IWadMapThing from "./wad-map-thing.interface";
-import IWadMapSidedef from "./waf-map-sidedef.interface";
-// import IWadMapLinedef from "./wad-map-linedef.interface";
+import { IWadMapThing, IWadMapLinedef, IWadMapSidedef, IWadMapVertex, IWadMapSegment, IWadMapSubsector, IWadMapNode, IWadMapSector } from "./wad-map-lump.interface";
 
-// typescript get type by enum
-type WadMapItemsByLump = {
+type WadMapItemsByLump<T extends WadMapLump> = {
   [WadMapLump.Things]: IWadMapThing;
   [WadMapLump.Linedefs]: IWadMapLinedef,
   [WadMapLump.SideDefs]: IWadMapSidedef,
-    [WadMapLump.Vertexes]: any,
-      [WadMapLump.Seags]: any,
-        [WadMapLump.Ssectors]: any,
-          [WadMapLump.Nodes]: any,
-            [WadMapLump.Sectors]: any,
+  [WadMapLump.Vertexes]: IWadMapVertex,
+  [WadMapLump.Seags]: IWadMapSegment,
+  [WadMapLump.Ssectors]: IWadMapSubsector,
+  [WadMapLump.Nodes]: IWadMapNode,
+  [WadMapLump.Sectors]: IWadMapSector,
   [WadMapLump.Reject]: any,
-    [WadMapLump.Blockmap]: any
-};
+  [WadMapLump.Blockmap]: any
+}[T];
 
-type WadMapItemByLump<T extends WadMapLump> = WadMapItemsByLump[T];
-
-export default WadMapItemByLump;
+export default WadMapItemsByLump;

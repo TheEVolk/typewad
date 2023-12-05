@@ -1,10 +1,8 @@
 import WadMap from "./map";
-import IWadMapLinedef from "./types/wad-map-linedef.interface";
 import WadMapLump from "./types/wad-map-lump.enum";
-import IWadMapSector from "./types/wad-map-sector.interface";
-import IWadMapSidedef from "./types/waf-map-sidedef.interface";
 import cdt2d from 'cdt2d';
 import cleanPSLG from 'clean-pslg';
+import { IWadMapSidedef, IWadMapSector, IWadMapLinedef } from "./types/wad-map-lump.interface";
 
 export default class MapMeshBuilder {
   private sidedefs: IWadMapSidedef[];
@@ -90,7 +88,7 @@ export default class MapMeshBuilder {
         endVertex.x, ceil, endVertex.y
       ],
       indices: [1, 2, 0, 3, 1, 0],
-      normals: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+      // normals: [],
       uvs: this.buildWallUv(startVertex, endVertex, floor, ceil, texture, sidedef),
     };
   }
@@ -139,7 +137,7 @@ export default class MapMeshBuilder {
       positions: points.flatMap(v => [v[0], 0, v[1]]),
       indices: triangles.flat(),
       uvs: points.flatMap(v => [v[0] / 64, v[1] / 64]),
-      normals: points.flatMap(() => [0, 0, 1]),
+      // normals: points.flatMap(() => [0, 0, 1]),
     };
   }
 }

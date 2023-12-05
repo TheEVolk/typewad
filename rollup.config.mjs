@@ -6,7 +6,7 @@ export default {
   input: 'src/index.ts',
   plugins: [
     typescript(),
-    terser(),
+    // terser(),
     /* run({
       execPath: 'node',
       execArgv: ['./test/test.js'],

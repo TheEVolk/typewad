@@ -3,15 +3,8 @@ import WadReader from "./reader";
 import { MAP_ITEM_SIZES } from "./const";
 import mapMappers from "./map-mappers";
 import WadMapItemByLump from "./types/wad-map-item-by-lump";
-import IWadMapLinedef from "./types/wad-map-linedef.interface";
-import IWadMapVertex from "./types/wad-map-vertex.interface";
-import IWadMapSidedef from "./types/waf-map-sidedef.interface";
-import IWadMapSector from "./types/wad-map-sector.interface";
-import { rawLineDistance } from "./util";
-import IWadMapNode from "./types/wad-map-node.interface";
-import IWadMapSegment from "./types/wad-map-segment.interface";
 import MapUtil from "./map-util";
-import IWadMapSubsector from "./types/wad-map-subsector.interface";
+import { IWadMapVertex, IWadMapLinedef, IWadMapSidedef, IWadMapSector, IWadMapSubsector, IWadMapNode, IWadMapSegment } from "./types/wad-map-lump.interface";
 
 export default class WadMap {
   private readonly offset: number;
