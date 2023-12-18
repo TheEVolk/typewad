@@ -28,7 +28,6 @@ export default class WadMap {
     this.segments = [...this.get(WadMapLump.Seags)];
 
     this.util = new MapUtil(this);
-    console.log(this);
   }
 
   public groupVertexesBySector() {

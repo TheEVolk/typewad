@@ -131,7 +131,7 @@ export default class MapMeshBuilder {
     const edges = Array.from({ length: points.length / 2 }, (_, i) => [i * 2, i * 2 + 1]);
 
     cleanPSLG(points, edges);
-    const triangles = cdt2d(points, edges, { exterior: false });
+    const triangles = cdt2d(points, edges, { exterior: false, delaunay: true });
 
     return {
       positions: points.flatMap(v => [v[0], 0, v[1]]),
