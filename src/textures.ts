@@ -23,7 +23,7 @@ export default class WadTextures {
     this.loadTextures(texture1Lump);
 
     const texture2Lump = wad.lumps[texture1Index + 1];
-    if (texture2Lump.name === 'TEXTURE2') {
+    if (texture2Lump?.name === 'TEXTURE2') {
       this.loadTextures(texture2Lump);
     }
   }
@@ -66,16 +66,16 @@ export default class WadTextures {
 
     return textureImageData;
   }
- 
-  public pictureToImageData(picture: IWadPicture) {
-      const imageDataLength = picture.width * picture.height * 4;
-      const imageData = new Uint8ClampedArray(imageDataLength);
 
-      for (let i = 0; i < picture.width; i++) {
-        this.drawColumn(imageData, picture, i);
-	    }	
-  
-      return imageData;
+  public pictureToImageData(picture: IWadPicture) {
+    const imageDataLength = picture.width * picture.height * 4;
+    const imageData = new Uint8ClampedArray(imageDataLength);
+
+    for (let i = 0; i < picture.width; i++) {
+      this.drawColumn(imageData, picture, i);
+    }
+
+    return imageData;
   }
 
   public flatToImageData(offset: number) {
@@ -101,7 +101,7 @@ export default class WadTextures {
       return;
     }
 
-    for (let i = startMarkerIndex + 1;; i++) {
+    for (let i = startMarkerIndex + 1; ; i++) {
       const lump = this.wad.lumps[i];
       if (!lump || lump.name === 'F_END') {
         break;
@@ -129,12 +129,12 @@ export default class WadTextures {
   ) {
     const destPixelSize = 4; // Each pixel in the destination has 4 values (RGBA)
     const srcPixelSize = 4;  // Each pixel in the source has 4 values (RGBA)
-  
+
     for (let y = 0; y < srcHeight; y++) {
       for (let x = 0; x < srcWidth; x++) {
         const srcIndex = ((srcY + y) * srcWidth + (srcX + x)) * srcPixelSize;
         const destIndex = ((destY + y) * destWidth + (destX + x)) * destPixelSize;
-  
+
         // Copy RGBA values from source to destination
         dest[destIndex] = src[srcIndex];         // Red
         dest[destIndex + 1] = src[srcIndex + 1]; // Green
@@ -192,26 +192,32 @@ export default class WadTextures {
   }
 
   private loadPicture(name: string) {
-    const lump = this.wad.getLump(name);
-    if (!lump) {
-      // why w94_1 not exists?
-      console.warn(`Warn lump picture ${name} not found`);
-      return;
+    try {
+      const [lump] = this.wad.find((lump, i, marker) => name === lump.name && marker !== 'F');
+      if (!lump) {
+        // why w94_1 not exists?
+        console.warn(`Warn lump picture ${name} not found`);
+        return;
+      }
+
+      const width = this.wad.buffer.readUInt16LE(lump.offset);
+      const columnOffsets = Array.from({ length: width }, (_, i) => this.wad.buffer.readUInt32LE(lump.offset + 8 + i * 4));
+
+      const picture: IWadPicture = {
+        width,
+        height: this.wad.buffer.readUInt16LE(lump.offset + 2),
+        offsetX: this.wad.buffer.readInt16LE(lump.offset + 4),
+        offsetY: this.wad.buffer.readInt16LE(lump.offset + 6),
+        lumpOffset: lump.offset,
+        columnOffsets,
+      };
+
+      this.pictures.set(name, picture);
+
+    } catch (error) {
+      console.log(error);
+      throw new Error(`Picture ${name}: ${error.message}`);
     }
-
-    const width = this.wad.buffer.readUInt16LE(lump.offset);
-    const columnOffsets = Array.from({ length: width }, (_, i) => this.wad.buffer.readUInt32LE(lump.offset + 8 + i * 4));
-
-    const picture: IWadPicture = {
-      width,
-      height: this.wad.buffer.readUInt16LE(lump.offset + 2),
-      offsetX: this.wad.buffer.readInt16LE(lump.offset + 4),
-      offsetY: this.wad.buffer.readInt16LE(lump.offset + 6),
-      lumpOffset: lump.offset,
-      columnOffsets,
-    };
-
-    this.pictures.set(name, picture);
   }
 
   private loadTextures(lump: IWadLump) {

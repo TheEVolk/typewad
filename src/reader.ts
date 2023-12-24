@@ -54,6 +54,34 @@ export default class WadReader {
     const index = this.findLumpIndex(name);
     return this.lumps[index];
   }
+  
+  public *walk() {
+    let marker = null;
+    for (let i = 0; i < this.lumps.length; i++) {
+      const lump = this.lumps[i];
+      if (lump.name.endsWith('_START')) {
+        marker = lump.name.substring(0, lump.name.length - 6);
+        continue;
+      }
+
+      if (marker && lump.name === `${marker}_END`) {
+        marker = null;
+        continue;
+      }
+
+      yield [this.lumps[i], i, marker];
+    }
+  }
+
+  public find(cb) {
+    for (const [lump, i, marker] of this.walk()) {
+      if (cb(lump, i, marker)) {
+        return [lump, i, marker];
+      }
+    }
+
+    return [null, -1, null];
+  }
 
   private parseHeader() {
     this.debug('Parsing Header:');
