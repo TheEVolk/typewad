@@ -6,6 +6,7 @@ import WadTextures from './textures.js';
 import IWadTexture from './types/wad-texture.interface.js';
 import IWadTexturePatch from './types/wad-texture-patch.interface.js';
 export * from './types/wad-map-lump.interface.js';
+export * from './util/map.js';
 
 export {
   WadReader,
